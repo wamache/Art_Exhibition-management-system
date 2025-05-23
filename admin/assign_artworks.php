@@ -6,7 +6,11 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
 
 include '../config/db.php';
 
-// Success or error message
+// Simple CSRF token generation and verification
+if (!isset($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
 if (isset($_GET['success'])) {
     echo "<p style='color: green;'>Artworks successfully assigned.</p>";
 }
@@ -14,14 +18,17 @@ if (isset($_GET['error']) && $_GET['error'] === 'exists') {
     echo "<p style='color: red;'>One or more artworks already exist in the exhibition.</p>";
 }
 
-// Get all exhibitions
 $exhibitions = $conn->query("SELECT * FROM exhibitions");
 
 $exhibition_id = isset($_GET['exhibition_id']) ? intval($_GET['exhibition_id']) : null;
 
 if ($exhibition_id) {
-    // Handle form submission to assign artworks
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        // CSRF check
+        if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+            die("Invalid CSRF token");
+        }
+
         $selected_artworks = $_POST['artworks'] ?? [];
 
         // Remove previous assignments
@@ -41,15 +48,15 @@ if ($exhibition_id) {
             $stmt->close();
         }
 
-        // Redirect to avoid resubmission and show message
         header("Location: manage_exhibition_artworks.php?exhibition_id=$exhibition_id&success=1");
         exit;
     }
 
-    // Fetch all artworks
-    $artworks = $conn->query("SELECT * FROM artworks");
+    // Fetch artworks safely
+    $artworks_stmt = $conn->prepare("SELECT id, title FROM artworks ORDER BY title");
+    $artworks_stmt->execute();
+    $artworks_result = $artworks_stmt->get_result();
 
-    // Get already assigned artwork IDs
     $assigned = $conn->prepare("SELECT artwork_id FROM exhibition_artworks WHERE exhibition_id = ?");
     $assigned->bind_param("i", $exhibition_id);
     $assigned->execute();
@@ -61,7 +68,6 @@ if ($exhibition_id) {
     }
     $assigned->close();
 
-    // Get exhibition title
     $exhibition_title_stmt = $conn->prepare("SELECT title FROM exhibitions WHERE id = ?");
     $exhibition_title_stmt->bind_param("i", $exhibition_id);
     $exhibition_title_stmt->execute();
@@ -73,12 +79,14 @@ if ($exhibition_id) {
 
 <h2>Assign Artworks to Exhibition</h2>
 
-<!-- Exhibition Selector -->
 <form method="get">
     <label for="exhibition_id">Select Exhibition:</label>
     <select name="exhibition_id" id="exhibition_id" onchange="this.form.submit()">
         <option value="">-- Choose --</option>
-        <?php while ($ex = $exhibitions->fetch_assoc()): ?>
+        <?php
+        $exhibitions->data_seek(0); // rewind in case needed
+        while ($ex = $exhibitions->fetch_assoc()):
+        ?>
             <option value="<?= $ex['id'] ?>" <?= $exhibition_id == $ex['id'] ? 'selected' : '' ?>>
                 <?= htmlspecialchars($ex['title']) ?>
             </option>
@@ -86,18 +94,26 @@ if ($exhibition_id) {
     </select>
 </form>
 
-<!-- Artwork Assignment Form -->
 <?php if ($exhibition_id): ?>
     <h3>Assign Artworks to: <?= htmlspecialchars($exhibition_title) ?></h3>
     <form method="post">
-        <?php foreach ($artworks as $art): ?>
+        <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
+        <label><input type="checkbox" id="select_all"> Select/Deselect All</label><br><br>
+        <?php while ($art = $artworks_result->fetch_assoc()): ?>
             <label>
                 <input type="checkbox" name="artworks[]" value="<?= $art['id'] ?>"
                     <?= in_array($art['id'], $assigned_ids) ? 'checked' : '' ?>>
                 <?= htmlspecialchars($art['title']) ?>
             </label><br>
-        <?php endforeach; ?>
+        <?php endwhile; ?>
         <br>
         <input type="submit" value="Assign Selected Artworks">
     </form>
+
+    <script>
+        document.getElementById('select_all').addEventListener('change', function() {
+            const checked = this.checked;
+            document.querySelectorAll('input[name="artworks[]"]').forEach(cb => cb.checked = checked);
+        });
+    </script>
 <?php endif; ?>

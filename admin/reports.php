@@ -24,26 +24,54 @@ $artist_performance = $conn->query("
     GROUP BY users.id
 ");
 ?>
-<h2>Reports</h2>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Reports</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+</head>
+<body>
+<div class="container my-5">
+    <h2 class="mb-4">Reports</h2>
 
-<h3>Exhibition Ticket Sales</h3>
-<table border="1">
-    <tr><th>Exhibition</th><th>Tickets Sold</th></tr>
-    <?php while ($row = $exhibition_sales->fetch_assoc()): ?>
-        <tr>
-            <td><?= htmlspecialchars($row['title']) ?></td>
-            <td><?= $row['tickets_sold'] ?></td>
-        </tr>
-    <?php endwhile; ?>
-</table>
+    <h3>Exhibition Ticket Sales</h3>
+    <table class="table table-bordered table-striped mb-5">
+        <thead class="table-dark">
+            <tr>
+                <th>Exhibition</th>
+                <th>Tickets Sold</th>
+            </tr>
+        </thead>
+        <tbody>
+        <?php while ($row = $exhibition_sales->fetch_assoc()): ?>
+            <tr>
+                <td><?= htmlspecialchars($row['title']) ?></td>
+                <td><?= $row['tickets_sold'] ?></td>
+            </tr>
+        <?php endwhile; ?>
+        </tbody>
+    </table>
 
-<h3>Top Performing Artists (By Ticket Sales)</h3>
-<table border="1">
-    <tr><th>Artist</th><th>Sales</th></tr>
-    <?php while ($row = $artist_performance->fetch_assoc()): ?>
-        <tr>
-            <td><?= htmlspecialchars($row['name']) ?></td>
-            <td><?= $row['total_sales'] ?></td>
-        </tr>
-    <?php endwhile; ?>
-</table>
+    <h3>Top Performing Artists (By Ticket Sales)</h3>
+    <table class="table table-bordered table-striped">
+        <thead class="table-dark">
+            <tr>
+                <th>Artist</th>
+                <th>Sales</th>
+            </tr>
+        </thead>
+        <tbody>
+        <?php while ($row = $artist_performance->fetch_assoc()): ?>
+            <tr>
+                <td><?= htmlspecialchars($row['name']) ?></td>
+                <td><?= $row['total_sales'] ?></td>
+            </tr>
+        <?php endwhile; ?>
+        </tbody>
+    </table>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

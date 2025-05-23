@@ -2,44 +2,86 @@
 session_start();
 include '../config/db.php';
 
-// Enable error reporting for debugging (optional, remove in production)
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $name = $_POST['name']; // use 'name' instead of 'username'
+$loginError = '';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $name = trim($_POST['name']);
     $password = $_POST['password'];
 
     if (empty($name) || empty($password)) {
-        echo "Name and password are required!";
-        exit;
-    }
-
-    // Use 'name' column in the query
-    $stmt = $conn->prepare("SELECT * FROM users WHERE name = ? AND role = 'artist'");
-    $stmt->bind_param("s", $name);
-    $stmt->execute();
-    $result = $stmt->get_result();
-
-    if ($result->num_rows === 1) {
-        $user = $result->fetch_assoc();
-
-        if (password_verify($password, $user['password'])) {
-            $_SESSION['user'] = $user;
-            header("Location: dashboard.php"); // Redirect to artist dashboard
-            exit;
-        } else {
-            echo "Invalid name or password!";
-        }
+        $loginError = "Name and password are required!";
     } else {
-        echo "Invalid name or password!";
+        $stmt = $conn->prepare("SELECT * FROM users WHERE name = ? AND role = 'artist'");
+        $stmt->bind_param("s", $name);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        if ($result->num_rows === 1) {
+            $user = $result->fetch_assoc();
+            if (password_verify($password, $user['password'])) {
+                $_SESSION['user'] = $user;
+                header("Location: dashboard.php");
+                exit;
+            } else {
+                $loginError = "Invalid name or password!";
+            }
+        } else {
+            $loginError = "Invalid name or password!";
+        }
     }
 }
 ?>
 
-<h2>Login as Artist</h2>
-<form method="POST" action="login.php">
-    Name: <input type="text" name="name" required><br>
-    Password: <input type="password" name="password" required><br>
-    <input type="submit" value="Login">
-</form>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Artist Login</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <style>
+        body {
+            background-color: #f2f4f8;
+        }
+        .login-container {
+            max-width: 400px;
+            margin: 80px auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 0 12px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <h2 class="mb-4 text-center text-primary">Artist Login</h2>
+
+        <?php if ($loginError): ?>
+            <div class="alert alert-danger"><?= htmlspecialchars($loginError) ?></div>
+        <?php endif; ?>
+
+        <form method="POST" action="">
+            <div class="mb-3">
+                <label class="form-label">Name</label>
+                <input type="text" name="name" class="form-control" required>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Password</label>
+                <input type="password" name="password" class="form-control" required>
+            </div>
+
+            <button type="submit" class="btn btn-success w-100">Login</button>
+        </form>
+
+        <div class="mt-3 text-center">
+            <a href="register.php">Don't have an account? Register</a>
+        </div>
+    </div>
+</body>
+</html>

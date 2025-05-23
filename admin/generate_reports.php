@@ -25,20 +25,20 @@ include '../config/db.php';
     <h2>Ticket Sales by Exhibition</h2>
     <?php
     $ticket_sales = $conn->query("
-        SELECT e.title AS exhibition, COUNT(t.id) AS tickets_sold, SUM(t.price) AS total_sales
+        SELECT e.title AS exhibition, COUNT(t.id) AS tickets_sold, IFNULL(SUM(t.price), 0) AS total_sales
         FROM tickets t
         JOIN exhibitions e ON t.exhibition_id = e.id
         GROUP BY e.id
     ");
 
-    if ($ticket_sales->num_rows > 0): ?>
+    if ($ticket_sales && $ticket_sales->num_rows > 0): ?>
         <table>
             <tr><th>Exhibition</th><th>Tickets Sold</th><th>Total Sales</th></tr>
             <?php while ($row = $ticket_sales->fetch_assoc()): ?>
                 <tr>
                     <td><?= htmlspecialchars($row['exhibition']) ?></td>
-                    <td><?= $row['tickets_sold'] ?></td>
-                    <td>$<?= number_format($row['total_sales'], 2) ?></td>
+                    <td><?= (int)$row['tickets_sold'] ?></td>
+                    <td>$<?= number_format((float)$row['total_sales'], 2) ?></td>
                 </tr>
             <?php endwhile; ?>
         </table>
@@ -57,13 +57,13 @@ include '../config/db.php';
         GROUP BY u.id
     ");
 
-    if ($artist_perf->num_rows > 0): ?>
+    if ($artist_perf && $artist_perf->num_rows > 0): ?>
         <table>
             <tr><th>Artist</th><th>Total Artworks Displayed</th></tr>
             <?php while ($row = $artist_perf->fetch_assoc()): ?>
                 <tr>
                     <td><?= htmlspecialchars($row['artist']) ?></td>
-                    <td><?= $row['total_artworks'] ?></td>
+                    <td><?= (int)$row['total_artworks'] ?></td>
                 </tr>
             <?php endwhile; ?>
         </table>
@@ -80,13 +80,13 @@ include '../config/db.php';
         GROUP BY e.id
     ");
 
-    if ($attendance->num_rows > 0): ?>
+    if ($attendance && $attendance->num_rows > 0): ?>
         <table>
             <tr><th>Exhibition</th><th>Attendees</th></tr>
             <?php while ($row = $attendance->fetch_assoc()): ?>
                 <tr>
                     <td><?= htmlspecialchars($row['exhibition']) ?></td>
-                    <td><?= $row['attendees'] ?></td>
+                    <td><?= (int)$row['attendees'] ?></td>
                 </tr>
             <?php endwhile; ?>
         </table>

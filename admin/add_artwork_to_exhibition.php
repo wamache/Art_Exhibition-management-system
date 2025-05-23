@@ -24,9 +24,16 @@ function log_action($conn, $user_id, $action, $details = '') {
     $stmt->close();
 }
 
-// $stmt = $conn->prepare("INSERT INTO exhibition_artworks (exhibition_id, artwork_id) VALUES (?, ?)");
-// $stmt->bind_param("ii", $exhibition_id, $artwork_id);
-// $stmt->execute();
+// Insert new assignment
+$stmt = $conn->prepare("INSERT INTO exhibition_artworks (exhibition_id, artwork_id) VALUES (?, ?)");
+$stmt->bind_param("ii", $exhibition_id, $artwork_id);
+$stmt->execute();
+$stmt->close();
 
-// header("Location: manage_exhibition_artworks.php?exhibition_id=$exhibition_id");
-// exit;
+// Log the assignment action
+log_action($conn, $_SESSION['user']['id'], 'Assigned artwork to exhibition', "Exhibition ID: $exhibition_id, Artwork ID: $artwork_id");
+
+// Redirect back with success message
+header("Location: manage_exhibition_artworks.php?exhibition_id=$exhibition_id&success=1");
+exit;
+?>
