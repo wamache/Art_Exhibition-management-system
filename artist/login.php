@@ -8,6 +8,7 @@ ini_set('display_errors', 1);
 $loginError = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+<<<<<<< HEAD
     $name = trim($_POST['name']);
     $password = $_POST['password'];
 
@@ -16,6 +17,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         $stmt = $conn->prepare("SELECT * FROM users WHERE name = ? AND role = 'artist'");
         $stmt->bind_param("s", $name);
+=======
+    $email = trim($_POST['email']);
+    $password = $_POST['password'];
+
+    if (empty($email) || empty($password)) {
+        $loginError = "Email and password are required!";
+    } else {
+        $stmt = $conn->prepare("SELECT * FROM users WHERE email = ? AND role = 'artist'");
+        $stmt->bind_param("s", $email);
+>>>>>>> 1c73759ed0b50120e64caf8151fcc524432d3bd7
         $stmt->execute();
         $result = $stmt->get_result();
 
@@ -26,10 +37,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 header("Location: dashboard.php");
                 exit;
             } else {
+<<<<<<< HEAD
                 $loginError = "Invalid name or password!";
             }
         } else {
             $loginError = "Invalid name or password!";
+=======
+                $loginError = "Invalid email or password!";
+            }
+        } else {
+            $loginError = "Invalid email or password!";
+>>>>>>> 1c73759ed0b50120e64caf8151fcc524432d3bd7
         }
     }
 }
@@ -67,8 +85,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         <form method="POST" action="">
             <div class="mb-3">
+<<<<<<< HEAD
                 <label class="form-label">Name</label>
                 <input type="text" name="name" class="form-control" required>
+=======
+                <label class="form-label">Email</label>
+                <input type="email" name="email" class="form-control" required>
+>>>>>>> 1c73759ed0b50120e64caf8151fcc524432d3bd7
             </div>
 
             <div class="mb-3">

@@ -87,6 +87,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
 
             <button type="submit" class="btn btn-success">Register</button>
+<<<<<<< HEAD
+=======
+
+            <div class="mt-3 text-center">
+            <a href="login.php">Do you have an account? Login</a>
+        </div>
+>>>>>>> 1c73759ed0b50120e64caf8151fcc524432d3bd7
         </form>
     </div>
 </body>

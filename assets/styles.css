@@ -1,0 +1,86 @@
+/* Reset & Base Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Open Sans', sans-serif;
+    background-color: #fdfdfd;
+    color: #333;
+    line-height: 1.6;
+}
+
+.container {
+    width: 90%;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* Header */
+.site-header {
+    background: #111;
+    color: #fff;
+    padding: 60px 0;
+    text-align: center;
+    background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('../assets/header-bg.jpg');
+    background-size: cover;
+    background-position: center;
+}
+
+.site-header .title {
+    font-family: 'Playfair Display', serif;
+    font-size: 48px;
+    margin-bottom: 10px;
+}
+
+.site-header .subtitle {
+    font-size: 20px;
+    opacity: 0.85;
+}
+
+/* Main Content */
+.main-content {
+    padding: 40px 0;
+}
+
+.exhibit-section {
+    margin-bottom: 50px;
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 30px;
+}
+
+.exhibit-section h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px;
+    margin-bottom: 15px;
+    color: #222;
+}
+
+.image-wrapper {
+    text-align: center;
+    margin: 20px 0;
+}
+
+.image-wrapper img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.exhibit-section p {
+    font-size: 18px;
+    color: #444;
+}
+
+/* Footer */
+.site-footer {
+    background-color: #222;
+    color: #eee;
+    text-align: center;
+    padding: 20px 0;
+    margin-top: 40px;
+    font-size: 14px;
+}

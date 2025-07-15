@@ -1,7 +1,11 @@
 <?php
 include '../config/db.php';
 
+<<<<<<< HEAD
 $result = $conn->query("SELECT * FROM exhibitions ORDER BY date DESC");
+=======
+$result = $conn->query("SELECT * FROM exhibitions ORDER BY start_date DESC");
+>>>>>>> 1c73759ed0b50120e64caf8151fcc524432d3bd7
 ?>
 
 <!DOCTYPE html>
@@ -54,8 +58,13 @@ $result = $conn->query("SELECT * FROM exhibitions ORDER BY date DESC");
                 <tr>
                     <td><?= htmlspecialchars($ex['title']) ?></td>
                     <td><?= htmlspecialchars($ex['description']) ?></td>
+<<<<<<< HEAD
                     <td><?= htmlspecialchars($ex['venue']) ?></td>
                     <td><?= htmlspecialchars($ex['date']) ?></td>
+=======
+                    <td><?= htmlspecialchars($ex['location']) ?></td>
+                    <td><?= htmlspecialchars($ex['start_date']) ?></td>
+>>>>>>> 1c73759ed0b50120e64caf8151fcc524432d3bd7
                 </tr>
                 <?php endwhile; ?>
             </tbody>

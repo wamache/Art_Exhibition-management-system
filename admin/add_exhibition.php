@@ -1,8 +1,18 @@
 <?php
 session_start();
+<<<<<<< HEAD
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') die("Access denied");
 include '../config/db.php';
 
+=======
+if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
+    die("Access denied");
+}
+
+include '../config/db.php';
+
+// Log action function
+>>>>>>> 1c73759ed0b50120e64caf8151fcc524432d3bd7
 function log_action($conn, $user_id, $action, $details = '') {
     $stmt = $conn->prepare("INSERT INTO system_logs (user_id, action, details) VALUES (?, ?, ?)");
     $stmt->bind_param("iss", $user_id, $action, $details);
@@ -12,6 +22,7 @@ function log_action($conn, $user_id, $action, $details = '') {
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $title = $_POST['title'];
+<<<<<<< HEAD
     $date = $_POST['date'];
     $venue = $_POST['venue'];
 
@@ -20,6 +31,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($stmt->execute()) {
         log_action($conn, $_SESSION['user']['id'], 'Created new exhibition', "Title: $title, Date: $date, Venue: $venue");
+=======
+    $start_date = $_POST['start_date'];
+    $end_date = $_POST['end_date'];
+    $location = $_POST['location'];
+
+    // Prepare insert statement
+    $stmt = $conn->prepare("INSERT INTO exhibitions (title, start_date, end_date, location) VALUES (?, ?, ?, ?)");
+    $stmt->bind_param("ssss", $title, $start_date, $end_date, $location);
+
+    if ($stmt->execute()) {
+        log_action($conn, $_SESSION['user']['id'], 'Created new exhibition', "Title: $title, Dates: $start_date to $end_date, Location: $location");
+>>>>>>> 1c73759ed0b50120e64caf8151fcc524432d3bd7
         header("Location: manage_exhibitions.php?success=1");
         exit;
     } else {
@@ -27,7 +50,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 ?>
+<<<<<<< HEAD
 
+=======
+>>>>>>> 1c73759ed0b50120e64caf8151fcc524432d3bd7
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -70,6 +96,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <input type="text" name="title" id="title" class="form-control" required />
             <div class="invalid-feedback">Please enter the exhibition title.</div>
         </div>
+<<<<<<< HEAD
         <div class="mb-3">
             <label for="date" class="form-label">Date <span class="text-danger">*</span></label>
             <input type="date" name="date" id="date" class="form-control" required />
@@ -80,6 +107,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <input type="text" name="venue" id="venue" class="form-control" required />
             <div class="invalid-feedback">Please enter the venue.</div>
         </div>
+=======
+
+        <div class="mb-3">
+            <label for="start_date" class="form-label">Start Date <span class="text-danger">*</span></label>
+            <input type="date" name="start_date" id="start_date" class="form-control" required />
+            <div class="invalid-feedback">Please select a start date.</div>
+        </div>
+
+        <div class="mb-3">
+            <label for="end_date" class="form-label">End Date <span class="text-danger">*</span></label>
+            <input type="date" name="end_date" id="end_date" class="form-control" required />
+            <div class="invalid-feedback">Please select an end date.</div>
+        </div>
+
+        <div class="mb-3">
+            <label for="location" class="form-label">Location <span class="text-danger">*</span></label>
+            <input type="text" name="location" id="location" class="form-control" required />
+            <div class="invalid-feedback">Please enter the exhibition location.</div>
+        </div>
+
+>>>>>>> 1c73759ed0b50120e64caf8151fcc524432d3bd7
         <button type="submit" class="btn btn-primary w-100">Create Exhibition</button>
     </form>
 </div>

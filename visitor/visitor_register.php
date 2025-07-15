@@ -45,6 +45,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
+<<<<<<< HEAD
             background-color: #f8f9fa;
         }
         .register-container {
@@ -54,11 +55,30 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             padding: 30px;
             border-radius: 8px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+=======
+            background-image: url('https://media.admiddleeast.com/photos/6537b9c8a4590cb2ed15ae22/16%3A9/w_2560%2Cc_limit/derick-mckinney-oARTWhz1ACc-unsplash.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .register-container {
+            width: 100%;
+            max-width: 450px;
+            background-color: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+>>>>>>> 1c73759ed0b50120e64caf8151fcc524432d3bd7
         }
     </style>
 </head>
 <body>
 
+<<<<<<< HEAD
 <div class="container">
     <div class="register-container">
         <h2 class="text-center text-primary mb-4">Register as Visitor</h2>
@@ -95,6 +115,41 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 </div>
 
 <!-- Bootstrap JS + jQuery (optional for later features) -->
+=======
+<div class="register-container">
+    <h2 class="text-center text-primary mb-4">Register as Visitor</h2>
+
+    <?php if (!empty($message)): ?>
+        <div class="alert alert-warning"><?= htmlspecialchars($message) ?></div>
+    <?php endif; ?>
+
+    <form method="POST" novalidate>
+        <div class="mb-3">
+            <label class="form-label" for="name">Name</label>
+            <input type="text" class="form-control" name="name" id="name" required>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label" for="email">Email</label>
+            <input type="email" class="form-control" name="email" id="email" required>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label" for="password">Password</label>
+            <input type="password" class="form-control" name="password" id="password" required>
+        </div>
+
+        <div class="d-grid">
+            <button type="submit" class="btn btn-success">Register</button>
+        </div>
+    </form>
+
+    <div class="mt-3 text-center">
+        <a href="visitor_login.php" class="text-decoration-none">Already have an account? Log in</a>
+    </div>
+</div>
+
+>>>>>>> 1c73759ed0b50120e64caf8151fcc524432d3bd7
 <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
