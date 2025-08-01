@@ -6,10 +6,31 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'artist') {
     die("Access denied");
 }
 
-$artist_id = $_SESSION['user']['id'];
+$user_id = $_SESSION['user']['id'];
 
-$artworks = $conn->query("SELECT * FROM artworks WHERE artist_id = $artist_id");
-$exhibitions = $conn->query("SELECT * FROM exhibitions");
+// Step 1: Get artist_id from the artists table for this user
+$stmt = $conn->prepare("SELECT id FROM artists WHERE user_id = ?");
+$stmt->bind_param("i", $user_id);
+$stmt->execute();
+$res = $stmt->get_result();
+$artist = $res->fetch_assoc();
+$stmt->close();
+
+if (!$artist) {
+    die("Artist profile not found.");
+}
+
+$artist_id = (int)$artist['id'];
+
+// Step 2: Fetch artworks for this artist_id
+$stmt = $conn->prepare("SELECT id, title FROM artworks WHERE artist_id = ?");
+$stmt->bind_param("i", $artist_id);
+$stmt->execute();
+$artworks = $stmt->get_result();
+$stmt->close();
+
+// Step 3: Fetch exhibitions (assuming all exhibitions)
+$exhibitions = $conn->query("SELECT id, title FROM exhibitions");
 
 $message = '';
 
@@ -37,23 +58,64 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
 <meta charset="UTF-8" />
 <title>Submit Artwork to Exhibition</title>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
 <style>
-    body { background-color: #f8f9fa; padding: 2rem; }
-    .form-container {
-        max-width: 500px;
-        margin: auto;
-        background: white;
+    body {
+        background:
+            url('https://www.transparenttextures.com/patterns/cubes.png'),
+            linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%);
+        min-height: 100vh;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         padding: 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .form-container {
+        max-width: 480px;
+        width: 100%;
+        background: white;
+        padding: 2.5rem 3rem;
+        border-radius: 1rem;
+        box-shadow: 0 12px 35px rgba(0, 0, 0, 0.1);
+        text-align: center;
+    }
+    h2 {
+        font-weight: 700;
+        color: #1e3a8a;
+        margin-bottom: 2rem;
+    }
+    .btn-primary {
+        width: 100%;
+        font-weight: 600;
+        padding: 0.75rem;
+        font-size: 1.1rem;
         border-radius: 0.5rem;
-        box-shadow: 0 0 10px rgba(0,0,0,.1);
+    }
+    .alert {
+        text-align: left;
+        font-size: 0.95rem;
+        margin-bottom: 1.5rem;
+    }
+    .back-btn {
+        display: inline-block;
+        margin-bottom: 1.5rem;
+        text-decoration: none;
+        color: #1e3a8a;
+        font-weight: 600;
+    }
+    .back-btn:hover {
+        text-decoration: underline;
     }
 </style>
 </head>
 <body>
 
 <div class="form-container">
-    <h2 class="mb-4">Submit Artwork to Exhibition</h2>
+    <a href="dashboard.php" class="back-btn">← Back to Dashboard</a>
+
+    <h2>Submit Artwork to Exhibition</h2>
 
     <?php if ($message): ?>
         <div class="alert <?= strpos($message, 'successfully') !== false ? 'alert-success' : 'alert-danger' ?> alert-dismissible fade show" role="alert">
@@ -62,47 +124,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
     <?php endif; ?>
 
-    <form method="post" id="submitArtworkForm">
-        <div class="mb-3">
-            <label for="artwork_id" class="form-label">Artwork</label>
+    <form method="post" id="submitArtworkForm" novalidate>
+        <div class="mb-4 text-start">
+            <label for="artwork_id" class="form-label fw-semibold">Select Artwork</label>
             <select name="artwork_id" id="artwork_id" class="form-select" required>
-                <option value="">-- Select Artwork --</option>
-                <?php
-                // Reset result pointer before looping (in case of prior iteration)
-                $artworks->data_seek(0);
-                while ($art = $artworks->fetch_assoc()): ?>
+                <option value="" disabled selected>-- Choose Artwork --</option>
+                <?php while ($art = $artworks->fetch_assoc()): ?>
                     <option value="<?= $art['id'] ?>"><?= htmlspecialchars($art['title']) ?></option>
                 <?php endwhile; ?>
             </select>
         </div>
 
-        <div class="mb-3">
-            <label for="exhibition_id" class="form-label">Exhibition</label>
+        <div class="mb-5 text-start">
+            <label for="exhibition_id" class="form-label fw-semibold">Select Exhibition</label>
             <select name="exhibition_id" id="exhibition_id" class="form-select" required>
-                <option value="">-- Select Exhibition --</option>
-                <?php
-                $exhibitions->data_seek(0);
-                while ($ex = $exhibitions->fetch_assoc()): ?>
+                <option value="" disabled selected>-- Choose Exhibition --</option>
+                <?php while ($ex = $exhibitions->fetch_assoc()): ?>
                     <option value="<?= $ex['id'] ?>"><?= htmlspecialchars($ex['title']) ?></option>
                 <?php endwhile; ?>
             </select>
         </div>
 
-        <button type="submit" class="btn btn-primary">Submit</button>
+        <button type="submit" class="btn btn-primary">Submit Artwork</button>
     </form>
 </div>
 
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-$(function(){
-    $('#submitArtworkForm').on('submit', function(e){
-        if (!$('#artwork_id').val() || !$('#exhibition_id').val()) {
+    document.getElementById('submitArtworkForm').addEventListener('submit', function(e) {
+        const artwork = document.getElementById('artwork_id').value;
+        const exhibition = document.getElementById('exhibition_id').value;
+
+        if (!artwork || !exhibition) {
             e.preventDefault();
             alert('Please select both artwork and exhibition.');
         }
     });
-});
 </script>
 
 </body>

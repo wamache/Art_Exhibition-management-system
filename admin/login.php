@@ -1,4 +1,4 @@
-<?php
+<?php 
 session_start();
 include '../config/db.php';
 
@@ -16,10 +16,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['user'] = $user;
             if ($user['role'] === 'admin') {
                 header("Location: ../admin/dashboard.php");
-<<<<<<< HEAD
-=======
                 exit;
->>>>>>> 1c73759ed0b50120e64caf8151fcc524432d3bd7
             } else {
                 $error = "Access denied: Not an admin.";
             }
@@ -34,94 +31,106 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF-8" />
     <title>Admin Login</title>
 
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
-<<<<<<< HEAD
-    <!-- jQuery -->
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js"></script>
-
-    <style>
-        body {
-            background-color: #f1f3f5;
-            padding-top: 50px;
-        }
-        .login-container {
-            max-width: 450px;
-            margin: auto;
-            background: #fff;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-=======
     <style>
         body {
             background: url('https://i0.wp.com/leaveydesign.com/wp-content/uploads/2024/06/Art-Curator-in-Office-683x1024.png?resize=683%2C1024&ssl=1') no-repeat center center fixed;
             background-size: cover;
             font-family: 'Segoe UI', sans-serif;
             padding-top: 60px;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
         .login-container {
             max-width: 450px;
-            margin: auto;
-            background: rgba(255, 255, 255, 0.94);
-            padding: 30px;
-            border-radius: 10px;
+            width: 90%;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px 35px;
+            border-radius: 12px;
             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
         }
 
         h2 {
-            color: #2c3e50;
+            color: #b22222;
+            font-weight: 700;
+            margin-bottom: 25px;
+            text-align: center;
         }
 
-        a {
+        .btn-primary {
+            background-color: #b22222;
+            border-color: #b22222;
+        }
+
+        .btn-primary:hover {
+            background-color: #8b1a1a;
+            border-color: #8b1a1a;
+        }
+
+        a.text-primary {
+            color: #b22222;
             text-decoration: none;
->>>>>>> 1c73759ed0b50120e64caf8151fcc524432d3bd7
+        }
+
+        a.text-primary:hover {
+            text-decoration: underline;
+            color: #8b1a1a;
+        }
+
+        .back-btn {
+            display: inline-block;
+            margin-bottom: 20px;
+            padding: 8px 15px;
+            background-color: #b22222;
+            color: white;
+            border-radius: 6px;
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .back-btn:hover {
+            background-color: #8b1a1a;
         }
     </style>
 </head>
 <body>
 
 <div class="login-container">
-    <h2 class="text-center mb-4">Admin Login</h2>
+
+    <a href="../index.php" class="back-btn">← Back to Home</a>
+
+    <h2>Admin Login</h2>
 
     <?php if (isset($error)): ?>
-<<<<<<< HEAD
-        <div class="alert alert-danger"><?= htmlspecialchars($error) ?></div>
-=======
         <div class="alert alert-danger text-center"><?= htmlspecialchars($error) ?></div>
->>>>>>> 1c73759ed0b50120e64caf8151fcc524432d3bd7
     <?php endif; ?>
 
-    <form method="post">
+    <form method="post" novalidate>
         <div class="mb-3">
-            <label for="email" class="form-label">Email</label>
-            <input type="email" name="email" class="form-control" required>
+            <label for="email" class="form-label">Email address</label>
+            <input id="email" type="email" name="email" class="form-control" placeholder="admin@example.com" required autofocus>
         </div>
 
         <div class="mb-4">
             <label for="password" class="form-label">Password</label>
-            <input type="password" name="password" class="form-control" required>
+            <input id="password" type="password" name="password" class="form-control" placeholder="Your password" required>
         </div>
 
         <div class="d-grid">
             <button type="submit" class="btn btn-primary">Login</button>
         </div>
-<<<<<<< HEAD
-=======
 
         <div class="mt-3 text-center">
             <a href="register_admin.php" class="text-primary">Don't have an account? Register</a>
         </div>
->>>>>>> 1c73759ed0b50120e64caf8151fcc524432d3bd7
     </form>
 </div>
 

@@ -1,6 +1,9 @@
 <?php
 session_start();
-if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') die("Access denied");
+if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
+    die("Access denied");
+}
+
 include '../config/db.php';
 
 function log_action($conn, $user_id, $action, $details = '') {
@@ -15,7 +18,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $price = $_POST['price'];
     $exhibition_id = $_POST['exhibition_id'];
 
-    // Basic price validation
     if (!is_numeric($price) || $price < 0) {
         die("Invalid price.");
     }
@@ -34,40 +36,54 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 $exhibitions = $conn->query("SELECT * FROM exhibitions");
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Add Ticket Type</title>
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
-    <!-- jQuery -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <!-- Bootstrap JS Bundle -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
 
     <style>
         body {
-            background: #f8f9fa;
-            padding: 30px;
+            background: url('https://images.unsplash.com/photo-1549924231-f129b911e442?auto=format&fit=crop&w=1950&q=80') no-repeat center center fixed;
+            background-size: cover;
+            font-family: 'Segoe UI', sans-serif;
         }
+
         .form-container {
-            max-width: 500px;
-            margin: auto;
-            background: white;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 0 12px rgba(0,0,0,0.1);
+            background: rgba(255, 255, 255, 0.95);
+            padding: 40px;
+            border-radius: 12px;
+            max-width: 600px;
+            margin: 80px auto;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
         }
+
+        .btn-back {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+        }
+
         h2 {
             text-align: center;
-            margin-bottom: 25px;
+            margin-bottom: 30px;
+            color: #343a40;
+        }
+
+        .footer-note {
+            text-align: center;
+            font-size: 0.85rem;
+            color: #6c757d;
+            margin-top: 20px;
         }
     </style>
 </head>
 <body>
+
+<a href="dashboard.php" class="btn btn-outline-light position-absolute btn-back">&larr; Back to Dashboard</a>
+
 <div class="form-container">
     <h2>Add New Ticket Type</h2>
     <form method="post" id="ticketTypeForm" novalidate>
@@ -82,7 +98,7 @@ $exhibitions = $conn->query("SELECT * FROM exhibitions");
         </div>
 
         <div class="mb-3">
-            <label for="price" class="form-label">Price ($) <span class="text-danger">*</span></label>
+            <label for="price" class="form-label">Price (ksh) <span class="text-danger">*</span></label>
             <input type="number" step="0.01" min="0" class="form-control" name="price" id="price" required />
             <div class="invalid-feedback">Please enter a valid price.</div>
         </div>
@@ -100,21 +116,25 @@ $exhibitions = $conn->query("SELECT * FROM exhibitions");
 
         <button type="submit" class="btn btn-primary w-100">Create Ticket Type</button>
     </form>
+
+    <div class="footer-note">
+        &copy; <?= date('Y') ?> AEMS. All rights reserved.
+    </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    (function() {
-        'use strict'
+    (() => {
+        'use strict';
         const form = document.getElementById('ticketTypeForm');
-        form.addEventListener('submit', function(event) {
+        form.addEventListener('submit', event => {
             if (!form.checkValidity()) {
                 event.preventDefault();
                 event.stopPropagation();
             }
             form.classList.add('was-validated');
-        }, false);
+        });
     })();
 </script>
-
 </body>
 </html>

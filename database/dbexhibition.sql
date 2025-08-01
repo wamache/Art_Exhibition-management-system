@@ -2,10 +2,10 @@
 -- version 5.2.1
 -- https://www.phpmyadmin.net/
 --
--- Host: localhost
--- Generation Time: May 21, 2025 at 06:29 PM
--- Server version: 10.4.28-MariaDB
--- PHP Version: 8.2.4
+-- Host: 127.0.0.1
+-- Generation Time: Aug 01, 2025 at 05:00 PM
+-- Server version: 10.4.32-MariaDB
+-- PHP Version: 8.2.12
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -37,11 +37,35 @@ CREATE TABLE `artists` (
 --
 -- Dumping data for table `artists`
 --
+-- --------------------------------------------------------
 
-INSERT INTO `artists` (`id`, `user_id`, `bio`, `contact`) VALUES
-(1, 3, 'Testing', '763532'),
-(2, 3, 'Testing', '763532'),
-(3, 2, 'ghdtuyfyiuktol', 'tested');
+--
+-- Table structure for table `artwork`
+--
+
+CREATE TABLE `artwork` (
+  `id` int(11) NOT NULL,
+  `artist_id` int(11) NOT NULL,
+  `title` varchar(255) NOT NULL,
+  `medium` varchar(255) DEFAULT NULL,
+  `support` varchar(255) DEFAULT NULL,
+  `technique` varchar(255) DEFAULT NULL,
+  `height` decimal(10,2) DEFAULT NULL,
+  `width` decimal(10,2) DEFAULT NULL,
+  `depth` decimal(10,2) DEFAULT NULL,
+  `year_created` int(11) DEFAULT NULL,
+  `condition_description` text DEFAULT NULL,
+  `framed` tinyint(1) DEFAULT 0,
+  `frame_description` text DEFAULT NULL,
+  `subject_matter` varchar(255) DEFAULT NULL,
+  `art_style` varchar(255) DEFAULT NULL,
+  `dominant_colors` text DEFAULT NULL,
+  `iconography` text DEFAULT NULL,
+  `description` text DEFAULT NULL,
+  `image` varchar(255) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -52,22 +76,20 @@ INSERT INTO `artists` (`id`, `user_id`, `bio`, `contact`) VALUES
 CREATE TABLE `artworks` (
   `id` int(11) NOT NULL,
   `artist_id` int(11) DEFAULT NULL,
-  `title` varchar(255) DEFAULT NULL,
+  `title` varchar(255) NOT NULL,
   `medium` varchar(255) DEFAULT NULL,
   `year_created` year(4) DEFAULT NULL,
   `description` text DEFAULT NULL,
-  `image` varchar(255) DEFAULT NULL
+  `image` varchar(255) NOT NULL,
+  `price` decimal(12,2) DEFAULT 0.00,
+  `status` enum('Available','Sold','Pending') DEFAULT 'Available',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `category` varchar(100) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `artworks`
 --
-
-INSERT INTO `artworks` (`id`, `artist_id`, `title`, `medium`, `year_created`, `description`, `image`) VALUES
-(1, NULL, 'My work', '23', '2025', 'testing', 'Screenshot 2025-05-20 at 5.21.43 pm.png'),
-(4, 3, 'The work', '34', '2024', 'The work', NULL),
-(5, 1, 'Add hope', '45', '2024', 'kfjhfgdflkdfdd', NULL),
-(6, 2, 'my Works', '45', '2012', 'this is the work of my hands', 'Screenshot 2025-05-14 at 6.15.55 pm.png');
 
 -- --------------------------------------------------------
 
@@ -77,19 +99,17 @@ INSERT INTO `artworks` (`id`, `artist_id`, `title`, `medium`, `year_created`, `d
 
 CREATE TABLE `exhibitions` (
   `id` int(11) NOT NULL,
-  `title` varchar(255) DEFAULT NULL,
-  `date` date DEFAULT NULL,
-  `venue` varchar(255) DEFAULT NULL
+  `title` varchar(255) NOT NULL,
+  `start_date` date NOT NULL,
+  `end_date` date NOT NULL,
+  `location` varchar(255) DEFAULT NULL,
+  `description` text DEFAULT NULL,
+  `image` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `exhibitions`
 --
-
-INSERT INTO `exhibitions` (`id`, `title`, `date`, `venue`) VALUES
-(1, 'The  exhibition', '2025-05-21', 'nairobi'),
-(2, 'The Victor', '2025-05-22', 'Kenya Cinema'),
-(3, 'The Tower', '2025-05-22', 'Cinema Hall');
 
 -- --------------------------------------------------------
 
@@ -106,15 +126,6 @@ CREATE TABLE `exhibition_artworks` (
 -- Dumping data for table `exhibition_artworks`
 --
 
-INSERT INTO `exhibition_artworks` (`exhibition_id`, `artwork_id`) VALUES
-(1, 1),
-(1, 4),
-(1, 5),
-(2, 1),
-(2, 4),
-(2, 5),
-(3, 6);
-
 -- --------------------------------------------------------
 
 --
@@ -130,6 +141,25 @@ CREATE TABLE `logs` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `reviews`
+--
+
+CREATE TABLE `reviews` (
+  `id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `exhibition_id` int(11) NOT NULL,
+  `rating` int(11) DEFAULT NULL CHECK (`rating` between 1 and 5),
+  `comment` text DEFAULT NULL,
+  `created_at` datetime DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `reviews`
+--
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `sales`
 --
 
@@ -138,6 +168,41 @@ CREATE TABLE `sales` (
   `ticket_id` int(11) DEFAULT NULL,
   `user_id` int(11) DEFAULT NULL,
   `sale_date` datetime DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `sales`
+--
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `sections`
+--
+
+CREATE TABLE `sections` (
+  `id` int(11) NOT NULL,
+  `slug` varchar(50) NOT NULL,
+  `name` varchar(100) DEFAULT NULL,
+  `enabled` tinyint(1) DEFAULT 1,
+  `position` int(11) DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `sections`
+--
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `section_contents`
+--
+
+CREATE TABLE `section_contents` (
+  `id` int(11) NOT NULL,
+  `section_id` int(11) NOT NULL,
+  `key` varchar(100) DEFAULT NULL,
+  `value` text DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -156,8 +221,6 @@ CREATE TABLE `subscribers` (
 -- Dumping data for table `subscribers`
 --
 
-INSERT INTO `subscribers` (`id`, `email`, `created_at`) VALUES
-(1, 'the@hot.com', '2025-05-21 15:26:52');
 
 -- --------------------------------------------------------
 
@@ -172,6 +235,11 @@ CREATE TABLE `system_logs` (
   `details` text DEFAULT NULL,
   `timestamp` datetime DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `system_logs`
+--
+
 
 -- --------------------------------------------------------
 
@@ -191,9 +259,6 @@ CREATE TABLE `tickets` (
 -- Dumping data for table `tickets`
 --
 
-INSERT INTO `tickets` (`id`, `visitor_id`, `exhibition_id`, `ticket_type`, `purchased_at`) VALUES
-(1, 4, 2, 'Standard', '2025-05-21 15:26:07'),
-(2, 4, 1, 'VIP', '2025-05-21 15:53:23');
 
 -- --------------------------------------------------------
 
@@ -212,14 +277,6 @@ CREATE TABLE `ticket_types` (
 -- Dumping data for table `ticket_types`
 --
 
-INSERT INTO `ticket_types` (`id`, `type`, `price`, `exhibition_id`) VALUES
-(1, 'Standard', 1000.00, 0),
-(2, 'Standard', 1000.00, 0),
-(3, 'VIP', 2000.00, 1),
-(4, 'Standard', 500.00, 1),
-(5, 'Standard', 1000.00, 2),
-(6, 'VIP', 2000.00, 1),
-(7, 'Standard', 34.00, 1);
 
 -- --------------------------------------------------------
 
@@ -240,11 +297,6 @@ CREATE TABLE `users` (
 -- Dumping data for table `users`
 --
 
-INSERT INTO `users` (`id`, `name`, `email`, `password`, `role`, `image`) VALUES
-(1, 'Administrator ', 'admin@hot.com', '$2y$10$rg77MKhVs5QPNQAyguznduqLhEMfUdE.euk0qJ7qeOK3YoVOx6OB.', 'admin', NULL),
-(2, 'Name test', 'testing@name.com', '$2y$10$ZagwotQm/6qSNIrf8PKpqOftPp0JWeh7TDX/HQWhV1W3EMagJTs6W', 'artist', NULL),
-(3, 'Test me', 'send@hol.com', '$2y$10$uZfTJE3KVq6IqJaaIO4gLOrL7rExr.TESCYy841RhomuuL5HWS/Ke', 'artist', NULL),
-(4, 'The visitor', 'the@hot.com', '$2y$10$KQcN9xnxVTAbl6i2XdA1w.ABM.l3EaA3o/FI/iNqH5boMcxuuqncO', 'visitor', NULL);
 
 --
 -- Indexes for dumped tables
@@ -256,6 +308,13 @@ INSERT INTO `users` (`id`, `name`, `email`, `password`, `role`, `image`) VALUES
 ALTER TABLE `artists`
   ADD PRIMARY KEY (`id`),
   ADD KEY `user_id` (`user_id`);
+
+--
+-- Indexes for table `artwork`
+--
+ALTER TABLE `artwork`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `artist_id` (`artist_id`);
 
 --
 -- Indexes for table `artworks`
@@ -284,12 +343,34 @@ ALTER TABLE `logs`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indexes for table `reviews`
+--
+ALTER TABLE `reviews`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `user_id` (`user_id`,`exhibition_id`),
+  ADD KEY `exhibition_id` (`exhibition_id`);
+
+--
 -- Indexes for table `sales`
 --
 ALTER TABLE `sales`
   ADD PRIMARY KEY (`id`),
   ADD KEY `ticket_id` (`ticket_id`),
   ADD KEY `user_id` (`user_id`);
+
+--
+-- Indexes for table `sections`
+--
+ALTER TABLE `sections`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `slug` (`slug`);
+
+--
+-- Indexes for table `section_contents`
+--
+ALTER TABLE `section_contents`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `section_id` (`section_id`);
 
 --
 -- Indexes for table `subscribers`
@@ -331,19 +412,25 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `artists`
 --
 ALTER TABLE `artists`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+
+--
+-- AUTO_INCREMENT for table `artwork`
+--
+ALTER TABLE `artwork`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `artworks`
 --
 ALTER TABLE `artworks`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=26;
 
 --
 -- AUTO_INCREMENT for table `exhibitions`
 --
 ALTER TABLE `exhibitions`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `logs`
@@ -352,40 +439,58 @@ ALTER TABLE `logs`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `reviews`
+--
+ALTER TABLE `reviews`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
 -- AUTO_INCREMENT for table `sales`
 --
 ALTER TABLE `sales`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+
+--
+-- AUTO_INCREMENT for table `sections`
+--
+ALTER TABLE `sections`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
+-- AUTO_INCREMENT for table `section_contents`
+--
+ALTER TABLE `section_contents`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `subscribers`
 --
 ALTER TABLE `subscribers`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `system_logs`
 --
 ALTER TABLE `system_logs`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=24;
 
 --
 -- AUTO_INCREMENT for table `tickets`
 --
 ALTER TABLE `tickets`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
 
 --
 -- AUTO_INCREMENT for table `ticket_types`
 --
 ALTER TABLE `ticket_types`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
 
 --
 -- Constraints for dumped tables
@@ -398,6 +503,12 @@ ALTER TABLE `artists`
   ADD CONSTRAINT `artists_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
 
 --
+-- Constraints for table `artwork`
+--
+ALTER TABLE `artwork`
+  ADD CONSTRAINT `artwork_ibfk_1` FOREIGN KEY (`artist_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
+
+--
 -- Constraints for table `artworks`
 --
 ALTER TABLE `artworks`
@@ -407,8 +518,15 @@ ALTER TABLE `artworks`
 -- Constraints for table `exhibition_artworks`
 --
 ALTER TABLE `exhibition_artworks`
-  ADD CONSTRAINT `exhibition_artworks_ibfk_1` FOREIGN KEY (`exhibition_id`) REFERENCES `exhibitions` (`id`),
+  ADD CONSTRAINT `exhibition_artworks_ibfk_1` FOREIGN KEY (`exhibition_id`) REFERENCES `exhibitions` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `exhibition_artworks_ibfk_2` FOREIGN KEY (`artwork_id`) REFERENCES `artworks` (`id`);
+
+--
+-- Constraints for table `reviews`
+--
+ALTER TABLE `reviews`
+  ADD CONSTRAINT `reviews_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`),
+  ADD CONSTRAINT `reviews_ibfk_2` FOREIGN KEY (`exhibition_id`) REFERENCES `exhibitions` (`id`);
 
 --
 -- Constraints for table `sales`
@@ -416,6 +534,12 @@ ALTER TABLE `exhibition_artworks`
 ALTER TABLE `sales`
   ADD CONSTRAINT `sales_ibfk_1` FOREIGN KEY (`ticket_id`) REFERENCES `tickets` (`id`),
   ADD CONSTRAINT `sales_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
+
+--
+-- Constraints for table `section_contents`
+--
+ALTER TABLE `section_contents`
+  ADD CONSTRAINT `section_contents_ibfk_1` FOREIGN KEY (`section_id`) REFERENCES `sections` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `system_logs`

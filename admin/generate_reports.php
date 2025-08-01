@@ -1,4 +1,4 @@
-<?php
+<?php 
 session_start();
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
     die("Access denied");
@@ -8,143 +8,180 @@ include '../config/db.php';
 ?>
 
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Reports</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Admin Reports - Art Exhibition</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
     <style>
-<<<<<<< HEAD
-        h2 { margin-top: 40px; }
-        table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
-        th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
-        th { background-color: #f0f0f0; }
-    </style>
-</head>
-<body>
-    <h1>Admin Reports</h1>
-
-    <!-- 1. Ticket Sales by Exhibition -->
-    <h2>Ticket Sales by Exhibition</h2>
-    <?php
-    $ticket_sales = $conn->query("
-        SELECT e.title AS exhibition, COUNT(t.id) AS tickets_sold, IFNULL(SUM(t.price), 0) AS total_sales
-        FROM tickets t
-        JOIN exhibitions e ON t.exhibition_id = e.id
-=======
         body {
-            font-family: Arial, sans-serif;
-            padding: 40px;
-            background-color: #f7f7f7;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1470&q=80') no-repeat center center fixed;
+            background-size: cover;
+            padding: 40px 20px;
+            color: #212529;
         }
-        h1 { text-align: center; }
-        h2 { margin-top: 50px; }
+        .container {
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 1000px;
+            margin: auto;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            position: relative;
+        }
+        h1, h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-weight: 700;
+        }
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 15px;
-            background: #fff;
+            margin-bottom: 40px;
         }
         th, td {
-            border: 1px solid #ddd;
-            padding: 10px;
+            padding: 12px 15px;
+            border: 1px solid #dee2e6;
+            text-align: left;
         }
         th {
             background-color: #343a40;
-            color: white;
+            color: #fff;
         }
-        tr:nth-child(even) { background-color: #f2f2f2; }
+        tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        p.no-data {
+            text-align: center;
+            font-style: italic;
+            color: #6c757d;
+            margin-bottom: 40px;
+        }
+        /* Back button styling */
+        .btn-back {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 999;
+        }
     </style>
 </head>
 <body>
-    <h1>📊 Admin Reports</h1>
 
-    <!-- 1. Ticket Sales by Exhibition -->
-    <h2>🎟 Ticket Sales by Exhibition</h2>
-    <?php
-    $ticket_sales = $conn->query("
-        SELECT 
-            e.title AS exhibition,
-            COUNT(t.id) AS tickets_sold,
-            IFNULL(SUM(tt.price), 0) AS total_sales
-        FROM tickets t
-        JOIN exhibitions e ON t.exhibition_id = e.id
-        JOIN ticket_types tt ON t.ticket_type = tt.type
->>>>>>> 1c73759ed0b50120e64caf8151fcc524432d3bd7
-        GROUP BY e.id
-    ");
+    <a href="dashboard.php" class="btn btn-outline-dark btn-back">&larr; Back to Dashboard</a>
 
-    if ($ticket_sales && $ticket_sales->num_rows > 0): ?>
-        <table>
-            <tr><th>Exhibition</th><th>Tickets Sold</th><th>Total Sales</th></tr>
-            <?php while ($row = $ticket_sales->fetch_assoc()): ?>
-                <tr>
-                    <td><?= htmlspecialchars($row['exhibition']) ?></td>
-                    <td><?= (int)$row['tickets_sold'] ?></td>
-                    <td>$<?= number_format((float)$row['total_sales'], 2) ?></td>
-                </tr>
-            <?php endwhile; ?>
-        </table>
-    <?php else: echo "<p>No ticket sales data available.</p>"; endif; ?>
+    <div class="container">
+        <h1>🎨 Admin Reports</h1>
 
+        <!-- 1. Ticket Sales by Exhibition -->
+        <h2>🎟 Ticket Sales by Exhibition</h2>
+        <?php
+        $ticket_sales = $conn->query("
+            SELECT 
+                e.title AS exhibition,
+                COUNT(t.id) AS tickets_sold,
+                IFNULL(SUM(tt.price), 0) AS total_sales
+            FROM tickets t
+            JOIN exhibitions e ON t.exhibition_id = e.id
+            LEFT JOIN ticket_types tt ON t.ticket_type = tt.type
+            GROUP BY e.id
+            ORDER BY total_sales DESC
+        ");
 
-<<<<<<< HEAD
-    <!-- 2. Artist Performance (Number of Artworks in Exhibitions) -->
-    <h2>Artist Performance</h2>
-=======
-    <!-- 2. Artist Performance -->
-    <h2>🎨 Artist Performance</h2>
->>>>>>> 1c73759ed0b50120e64caf8151fcc524432d3bd7
-    <?php
-    $artist_perf = $conn->query("
-        SELECT u.name AS artist, COUNT(ea.artwork_id) AS total_artworks
-        FROM users u
-        JOIN artworks a ON u.id = a.artist_id
-        JOIN exhibition_artworks ea ON a.id = ea.artwork_id
-        WHERE u.role = 'artist'
-        GROUP BY u.id
-    ");
-
-    if ($artist_perf && $artist_perf->num_rows > 0): ?>
-        <table>
-            <tr><th>Artist</th><th>Total Artworks Displayed</th></tr>
-            <?php while ($row = $artist_perf->fetch_assoc()): ?>
-                <tr>
-                    <td><?= htmlspecialchars($row['artist']) ?></td>
-                    <td><?= (int)$row['total_artworks'] ?></td>
-                </tr>
-            <?php endwhile; ?>
-        </table>
-    <?php else: echo "<p>No artist performance data available.</p>"; endif; ?>
+        if ($ticket_sales && $ticket_sales->num_rows > 0): ?>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Exhibition</th>
+                        <th>Tickets Sold</th>
+                        <th>Total Sales (ksh)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                <?php while ($row = $ticket_sales->fetch_assoc()): ?>
+                    <tr>
+                        <td><?= htmlspecialchars($row['exhibition']) ?></td>
+                        <td><?= (int)$row['tickets_sold'] ?></td>
+                        <td><?= number_format((float)$row['total_sales'], 2) ?></td>
+                    </tr>
+                <?php endwhile; ?>
+                </tbody>
+            </table>
+        <?php else: ?>
+            <p class="no-data">No ticket sales data available.</p>
+        <?php endif; ?>
 
 
-<<<<<<< HEAD
-    <!-- 3. Exhibition Attendance (Ticket count per Exhibition) -->
-    <h2>Exhibition Attendance</h2>
-=======
-    <!-- 3. Exhibition Attendance -->
-    <h2>👥 Exhibition Attendance</h2>
->>>>>>> 1c73759ed0b50120e64caf8151fcc524432d3bd7
-    <?php
-    $attendance = $conn->query("
-        SELECT e.title AS exhibition, COUNT(t.id) AS attendees
-        FROM tickets t
-        JOIN exhibitions e ON t.exhibition_id = e.id
-        GROUP BY e.id
-    ");
+        <!-- 2. Artist Performance -->
+        <h2>🎨 Artist Performance</h2>
+        <?php
+        $artist_perf = $conn->query("
+            SELECT u.name AS artist, COUNT(ea.artwork_id) AS total_artworks
+            FROM users u
+            JOIN artworks a ON u.id = a.artist_id
+            JOIN exhibition_artworks ea ON a.id = ea.artwork_id
+            WHERE u.role = 'artist'
+            GROUP BY u.id
+            ORDER BY total_artworks DESC
+        ");
 
-    if ($attendance && $attendance->num_rows > 0): ?>
-        <table>
-            <tr><th>Exhibition</th><th>Attendees</th></tr>
-            <?php while ($row = $attendance->fetch_assoc()): ?>
-                <tr>
-                    <td><?= htmlspecialchars($row['exhibition']) ?></td>
-                    <td><?= (int)$row['attendees'] ?></td>
-                </tr>
-            <?php endwhile; ?>
-        </table>
-    <?php else: echo "<p>No exhibition attendance data available.</p>"; endif; ?>
-<<<<<<< HEAD
+        if ($artist_perf && $artist_perf->num_rows > 0): ?>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Artist</th>
+                        <th>Total Artworks Displayed</th>
+                    </tr>
+                </thead>
+                <tbody>
+                <?php while ($row = $artist_perf->fetch_assoc()): ?>
+                    <tr>
+                        <td><?= htmlspecialchars($row['artist']) ?></td>
+                        <td><?= (int)$row['total_artworks'] ?></td>
+                    </tr>
+                <?php endwhile; ?>
+                </tbody>
+            </table>
+        <?php else: ?>
+            <p class="no-data">No artist performance data available.</p>
+        <?php endif; ?>
 
-=======
->>>>>>> 1c73759ed0b50120e64caf8151fcc524432d3bd7
+
+        <!-- 3. Exhibition Attendance -->
+        <h2>👥 Exhibition Attendance</h2>
+        <?php
+        $attendance = $conn->query("
+            SELECT e.title AS exhibition, COUNT(t.id) AS attendees
+            FROM tickets t
+            JOIN exhibitions e ON t.exhibition_id = e.id
+            GROUP BY e.id
+            ORDER BY attendees DESC
+        ");
+
+        if ($attendance && $attendance->num_rows > 0): ?>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Exhibition</th>
+                        <th>Attendees</th>
+                    </tr>
+                </thead>
+                <tbody>
+                <?php while ($row = $attendance->fetch_assoc()): ?>
+                    <tr>
+                        <td><?= htmlspecialchars($row['exhibition']) ?></td>
+                        <td><?= (int)$row['attendees'] ?></td>
+                    </tr>
+                <?php endwhile; ?>
+                </tbody>
+            </table>
+        <?php else: ?>
+            <p class="no-data">No exhibition attendance data available.</p>
+        <?php endif; ?>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

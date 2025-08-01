@@ -1,15 +1,16 @@
 <?php
 session_start();
-if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') die("Access denied");
+if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
+    die("Access denied");
+}
+
 include '../config/db.php';
 
-// Sanitize and validate ID
 $id = isset($_GET['id']) ? intval($_GET['id']) : 0;
 if ($id <= 0) {
     die("Invalid exhibition ID.");
 }
 
-// Fetch exhibition
 $stmt = $conn->prepare("SELECT * FROM exhibitions WHERE id = ?");
 $stmt->bind_param("i", $id);
 $stmt->execute();
@@ -21,21 +22,16 @@ if (!$exhibition) {
     die("Exhibition not found.");
 }
 
-// Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $title = trim($_POST['title']);
-    $date = $_POST['date'];
-    $venue = trim($_POST['venue']);
+    $start_date = $_POST['start_date'];
+    $end_date = $_POST['end_date'];
+    $location = trim($_POST['location']);
 
-    // Optional: Add date validation here if desired
-
-    $stmt = $conn->prepare("UPDATE exhibitions SET title = ?, date = ?, venue = ? WHERE id = ?");
-    $stmt->bind_param("sssi", $title, $date, $venue, $id);
+    $stmt = $conn->prepare("UPDATE exhibitions SET title = ?, start_date = ?, end_date = ?, location = ? WHERE id = ?");
+    $stmt->bind_param("ssssi", $title, $start_date, $end_date, $location, $id);
     $stmt->execute();
     $stmt->close();
-
-    // Optionally log the update
-    // log_action($conn, $_SESSION['user']['id'], 'Updated Exhibition', "ID: $id");
 
     header("Location: manage_exhibitions.php");
     exit;
@@ -48,29 +44,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Edit Exhibition</title>
-    <!-- Bootstrap CSS -->
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
-    <!-- jQuery -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <!-- Bootstrap JS Bundle -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <style>
         body {
-            background-color: #f8f9fa;
-            padding: 30px;
+            background: linear-gradient(to right, #6a11cb, #2575fc);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            padding: 40px 15px;
+            color: #fff;
         }
         .form-container {
-            max-width: 600px;
+            max-width: 650px;
             margin: auto;
-            background: white;
-            padding: 25px 30px;
-            border-radius: 8px;
-            box-shadow: 0 0 12px rgba(0,0,0,0.1);
+            background: #fff;
+            padding: 30px 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            color: #212529;
         }
         h2 {
-            margin-bottom: 25px;
             text-align: center;
+            margin-bottom: 30px;
+            font-weight: bold;
+            color: #343a40;
+        }
+        .btn-primary {
+            background-color: #4e3bbf;
+            border: none;
+            font-weight: 600;
+        }
+        .btn-primary:hover {
+            background-color: #3829a3;
+        }
+        .btn-secondary {
+            background-color: #6c757d;
+            border: none;
+        }
+        .btn-secondary:hover {
+            background-color: #5a6268;
         }
     </style>
 </head>
@@ -93,32 +106,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
 
         <div class="mb-3">
-            <label for="date" class="form-label">Date <span class="text-danger">*</span></label>
+            <label for="start_date" class="form-label">Start Date <span class="text-danger">*</span></label>
             <input
                 type="date"
                 class="form-control"
-                id="date"
-                name="date"
-                value="<?= htmlspecialchars($exhibition['date']) ?>"
+                id="start_date"
+                name="start_date"
+                value="<?= htmlspecialchars($exhibition['start_date']) ?>"
                 required
             />
-            <div class="invalid-feedback">Please select a valid date.</div>
+            <div class="invalid-feedback">Please select a start date.</div>
         </div>
 
         <div class="mb-3">
-            <label for="venue" class="form-label">Venue <span class="text-danger">*</span></label>
+            <label for="end_date" class="form-label">End Date <span class="text-danger">*</span></label>
+            <input
+                type="date"
+                class="form-control"
+                id="end_date"
+                name="end_date"
+                value="<?= htmlspecialchars($exhibition['end_date']) ?>"
+                required
+            />
+            <div class="invalid-feedback">Please select an end date.</div>
+        </div>
+
+        <div class="mb-3">
+            <label for="location" class="form-label">Location <span class="text-danger">*</span></label>
             <input
                 type="text"
                 class="form-control"
-                id="venue"
-                name="venue"
-                value="<?= htmlspecialchars($exhibition['venue']) ?>"
+                id="location"
+                name="location"
+                value="<?= htmlspecialchars($exhibition['location']) ?>"
                 required
             />
-            <div class="invalid-feedback">Please enter the venue.</div>
+            <div class="invalid-feedback">Please enter the location.</div>
         </div>
 
         <button type="submit" class="btn btn-primary w-100">Update Exhibition</button>
+        <a href="manage_exhibitions.php" class="btn btn-secondary w-100 mt-3">&larr; Back</a>
     </form>
 </div>
 
@@ -126,7 +153,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     (function () {
         'use strict';
         const form = document.getElementById('editExhibitionForm');
-
         form.addEventListener('submit', function (event) {
             if (!form.checkValidity()) {
                 event.preventDefault();

@@ -6,59 +6,52 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
 
 include '../config/db.php';
 
-// Sanitize and validate ticket ID
-$id = isset($_GET['id']) ? intval($_GET['id']) : 0;
-if ($id <= 0) {
-    die("Invalid ticket ID.");
-}
-
-// Fetch ticket info
-$stmt = $conn->prepare("SELECT * FROM tickets WHERE id = ?");
-$stmt->bind_param("i", $id);
-$stmt->execute();
-$ticket = $stmt->get_result()->fetch_assoc();
-$stmt->close();
-
-if (!$ticket) {
-    die("Ticket not found.");
-}
-
-// Fetch exhibitions for dropdown
-$exhibitions = $conn->query("SELECT id, title FROM exhibitions ORDER BY title");
-
-// Fetch ticket types for dropdown (only for this exhibition)
-$ticket_types = [];
-if ($ticket['exhibition_id']) {
-    $stmt = $conn->prepare("SELECT id, type FROM ticket_types WHERE exhibition_id = ? ORDER BY type");
-    $stmt->bind_param("i", $ticket['exhibition_id']);
+function log_action($conn, $user_id, $action, $details = '') {
+    $stmt = $conn->prepare("INSERT INTO system_logs (user_id, action, details) VALUES (?, ?, ?)");
+    $stmt->bind_param("iss", $user_id, $action, $details);
     $stmt->execute();
-    $result = $stmt->get_result();
-    while ($row = $result->fetch_assoc()) {
-        $ticket_types[] = $row;
-    }
     $stmt->close();
 }
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $exhibition_id = intval($_POST['exhibition_id']);
-    $ticket_type_id = intval($_POST['ticket_type_id']);
-    $buyer_name = trim($_POST['buyer_name']);
-    $price = floatval($_POST['price']);
+// Validate ticket_type ID
+$id = isset($_GET['id']) ? intval($_GET['id']) : 0;
+if ($id <= 0) {
+    die("Invalid ticket type ID.");
+}
 
-    // Basic validations
-    if ($exhibition_id <= 0 || $ticket_type_id <= 0 || empty($buyer_name) || $price < 0) {
-        die("Invalid form data.");
+// Fetch current ticket type
+$stmt = $conn->prepare("SELECT * FROM ticket_types WHERE id = ?");
+$stmt->bind_param("i", $id);
+$stmt->execute();
+$ticket_type = $stmt->get_result()->fetch_assoc();
+$stmt->close();
+
+if (!$ticket_type) {
+    die("Ticket type not found.");
+}
+
+// Fetch exhibitions
+$exhibitions = $conn->query("SELECT id, title FROM exhibitions ORDER BY title");
+
+// Handle form submission
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $type = $_POST['type'] ?? '';
+    $price = $_POST['price'] ?? '';
+    $exhibition_id = $_POST['exhibition_id'] ?? '';
+
+    if (!in_array($type, ['Standard', 'VIP']) || !is_numeric($price) || $price < 0 || !is_numeric($exhibition_id)) {
+        die("Invalid form input.");
     }
 
-    $stmt = $conn->prepare("UPDATE tickets SET exhibition_id = ?, ticket_type_id = ?, buyer_name = ?, price = ? WHERE id = ?");
-    $stmt->bind_param("iisdi", $exhibition_id, $ticket_type_id, $buyer_name, $price, $id);
+    $stmt = $conn->prepare("UPDATE ticket_types SET type = ?, price = ?, exhibition_id = ? WHERE id = ?");
+    $stmt->bind_param("sdii", $type, $price, $exhibition_id, $id);
 
     if ($stmt->execute()) {
-        $stmt->close();
-        header("Location: manage_tickets.php?success=1");
+        log_action($conn, $_SESSION['user']['id'], 'Updated ticket type', "ID: $id, Type: $type, Price: $price, Exhibition ID: $exhibition_id");
+        header("Location: manage_ticket_types.php?updated=1");
         exit;
     } else {
-        die("Error updating ticket: " . $stmt->error);
+        die("Error updating ticket type: " . $stmt->error);
     }
 }
 ?>
@@ -66,121 +59,103 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Edit Ticket</title>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<style>
-  body {
-    background: #f8f9fa;
-    padding: 30px;
-  }
-  .form-container {
-    max-width: 600px;
-    margin: auto;
-    background: white;
-    padding: 25px 30px;
-    border-radius: 8px;
-    box-shadow: 0 0 12px rgba(0,0,0,0.1);
-  }
-  h2 {
-    margin-bottom: 25px;
-    text-align: center;
-  }
-</style>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Edit Ticket Type</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <style>
+        body {
+            background: url('https://images.unsplash.com/photo-1549924231-f129b911e442?auto=format&fit=crop&w=1950&q=80') no-repeat center center fixed;
+            background-size: cover;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        .form-container {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 40px;
+            border-radius: 12px;
+            max-width: 600px;
+            margin: 80px auto;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+        }
+
+        .btn-back {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #343a40;
+        }
+
+        .footer-note {
+            text-align: center;
+            font-size: 0.85rem;
+            color: #6c757d;
+            margin-top: 20px;
+        }
+    </style>
 </head>
 <body>
 
+<a href="manage_ticket_types.php" class="btn btn-outline-light position-absolute btn-back">&larr; Back</a>
+
 <div class="form-container">
-  <h2>Edit Ticket</h2>
-  <form id="editTicketForm" method="post" novalidate>
-    <div class="mb-3">
-      <label for="exhibition_id" class="form-label">Exhibition <span class="text-danger">*</span></label>
-      <select id="exhibition_id" name="exhibition_id" class="form-select" required>
-        <option value="" disabled>Select Exhibition</option>
-        <?php while ($ex = $exhibitions->fetch_assoc()): ?>
-          <option value="<?= $ex['id'] ?>" <?= $ex['id'] == $ticket['exhibition_id'] ? 'selected' : '' ?>>
-            <?= htmlspecialchars($ex['title']) ?>
-          </option>
-        <?php endwhile; ?>
-      </select>
-      <div class="invalid-feedback">Please select an exhibition.</div>
-    </div>
+    <h2>Edit Ticket Type</h2>
+    <form method="post" id="ticketTypeForm" novalidate>
+        <div class="mb-3">
+            <label for="type" class="form-label">Ticket Type <span class="text-danger">*</span></label>
+            <select class="form-select" name="type" id="type" required>
+                <option value="">Select ticket type</option>
+                <option value="Standard" <?= $ticket_type['type'] === 'Standard' ? 'selected' : '' ?>>Standard</option>
+                <option value="VIP" <?= $ticket_type['type'] === 'VIP' ? 'selected' : '' ?>>VIP</option>
+            </select>
+            <div class="invalid-feedback">Please select a ticket type.</div>
+        </div>
 
-    <div class="mb-3">
-      <label for="ticket_type_id" class="form-label">Ticket Type <span class="text-danger">*</span></label>
-      <select id="ticket_type_id" name="ticket_type_id" class="form-select" required>
-        <option value="" disabled>Select Ticket Type</option>
-        <?php foreach ($ticket_types as $tt): ?>
-          <option value="<?= $tt['id'] ?>" <?= $tt['id'] == $ticket['ticket_type_id'] ? 'selected' : '' ?>>
-            <?= htmlspecialchars($tt['type']) ?>
-          </option>
-        <?php endforeach; ?>
-      </select>
-      <div class="invalid-feedback">Please select a ticket type.</div>
-    </div>
+        <div class="mb-3">
+            <label for="price" class="form-label">Price (Ksh) <span class="text-danger">*</span></label>
+            <input type="number" step="0.01" min="0" class="form-control" name="price" id="price" value="<?= htmlspecialchars($ticket_type['price']) ?>" required />
+            <div class="invalid-feedback">Please enter a valid price.</div>
+        </div>
 
-    <div class="mb-3">
-      <label for="buyer_name" class="form-label">Buyer Name <span class="text-danger">*</span></label>
-      <input type="text" id="buyer_name" name="buyer_name" class="form-control" value="<?= htmlspecialchars($ticket['buyer_name']) ?>" required>
-      <div class="invalid-feedback">Please enter the buyer's name.</div>
-    </div>
+        <div class="mb-3">
+            <label for="exhibition_id" class="form-label">Exhibition <span class="text-danger">*</span></label>
+            <select class="form-select" name="exhibition_id" id="exhibition_id" required>
+                <option value="">Select exhibition</option>
+                <?php while ($ex = $exhibitions->fetch_assoc()): ?>
+                    <option value="<?= $ex['id'] ?>" <?= $ex['id'] == $ticket_type['exhibition_id'] ? 'selected' : '' ?>>
+                        <?= htmlspecialchars($ex['title']) ?>
+                    </option>
+                <?php endwhile; ?>
+            </select>
+            <div class="invalid-feedback">Please select an exhibition.</div>
+        </div>
 
-    <div class="mb-3">
-      <label for="price" class="form-label">Price ($) <span class="text-danger">*</span></label>
-      <input type="number" step="0.01" min="0" id="price" name="price" class="form-control" value="<?= number_format($ticket['price'], 2) ?>" required>
-      <div class="invalid-feedback">Please enter a valid price.</div>
-    </div>
+        <button type="submit" class="btn btn-primary w-100">Update Ticket Type</button>
+    </form>
 
-    <button type="submit" class="btn btn-primary w-100">Update Ticket</button>
-  </form>
+    <div class="footer-note">
+        &copy; <?= date('Y') ?> AEMS. All rights reserved.
+    </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-$(document).ready(function(){
-  // Bootstrap validation
-  (function () {
-    'use strict';
-    var form = document.getElementById('editTicketForm');
-    form.addEventListener('submit', function (event) {
-      if (!form.checkValidity()) {
-        event.preventDefault();
-        event.stopPropagation();
-      }
-      form.classList.add('was-validated');
-    }, false);
-  })();
-
-  // Dynamically reload ticket types on exhibition change
-  $('#exhibition_id').on('change', function () {
-    var exhibitionId = $(this).val();
-    $('#ticket_type_id').html('<option>Loading...</option>');
-
-    if (exhibitionId) {
-      $.ajax({
-        url: 'fetch_ticket_types.php',
-        method: 'GET',
-        data: { exhibition_id: exhibitionId },
-        dataType: 'json',
-        success: function (data) {
-          var options = '<option value="" disabled selected>Select Ticket Type</option>';
-          $.each(data, function(i, item) {
-            options += '<option value="' + item.id + '">' + item.type + '</option>';
-          });
-          $('#ticket_type_id').html(options);
-        },
-        error: function () {
-          $('#ticket_type_id').html('<option value="" disabled>Error loading ticket types</option>');
-        }
-      });
-    } else {
-      $('#ticket_type_id').html('<option value="" disabled>Select exhibition first</option>');
-    }
-  });
-});
+    (() => {
+        'use strict';
+        const form = document.getElementById('ticketTypeForm');
+        form.addEventListener('submit', event => {
+            if (!form.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            form.classList.add('was-validated');
+        });
+    })();
 </script>
-
 </body>
 </html>

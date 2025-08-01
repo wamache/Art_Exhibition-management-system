@@ -1,6 +1,6 @@
 <?php
 session_start();
-if ($_SESSION['user']['role'] !== 'admin') die("Access denied");
+if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') die("Access denied");
 
 include '../config/db.php';
 
@@ -42,11 +42,12 @@ $all_artworks = $conn->query("SELECT a.id, a.title, u.name AS artist_name FROM a
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Assign Artworks</title>
+    <meta charset="UTF-8" />
+    <title>Manage Artworks in Exhibitions</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
 
     <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
@@ -55,16 +56,61 @@ $all_artworks = $conn->query("SELECT a.id, a.title, u.name AS artist_name FROM a
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
     <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            background: linear-gradient(135deg, #667eea, #764ba2, #6a11cb);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
         body {
-            background-color: #f8f9fa;
-            padding-top: 40px;
+            padding-top: 70px; /* space for fixed back button */
+            color: #333;
+        }
+        .container {
+            max-width: 960px;
+            background: #fff;
+            padding: 30px 40px;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+            margin: auto;
+        }
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 10000;
+            font-weight: 600;
+            font-size: 16px;
+            color: #000;
+            background: #fff;
+            padding: 8px 14px;
+            border-radius: 6px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+            text-decoration: none;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .back-btn:hover {
+            background: #f0f0f0;
+            color: #333;
+        }
+        table th, table td {
+            vertical-align: middle !important;
+        }
+        @media (max-width: 575.98px) {
+            .container {
+                padding: 20px 20px;
+            }
         }
     </style>
 </head>
 <body>
-<div class="container">
 
-    <h2 class="mb-4">Manage Artworks in Exhibitions</h2>
+<a href="manage_exhibitions.php" class="back-btn" title="Back to Manage Exhibitions">
+    &larr; Back
+</a>
+
+<div class="container">
+    <h2 class="mb-4 text-center">Manage Artworks in Exhibitions</h2>
 
     <?php if (isset($_GET['error']) && $_GET['error'] === 'exists'): ?>
         <div class="alert alert-danger">This artwork is already assigned to the exhibition.</div>
@@ -75,11 +121,11 @@ $all_artworks = $conn->query("SELECT a.id, a.title, u.name AS artist_name FROM a
     <?php endif; ?>
 
     <form method="get" class="mb-4">
-        <div class="row g-3 align-items-center">
+        <div class="row g-3 align-items-center justify-content-center">
             <div class="col-auto">
-                <label for="exhibition_id" class="col-form-label">Select Exhibition:</label>
+                <label for="exhibition_id" class="col-form-label fw-semibold">Select Exhibition:</label>
             </div>
-            <div class="col-auto">
+            <div class="col-auto" style="min-width: 250px;">
                 <select name="exhibition_id" id="exhibition_id" class="form-select" onchange="this.form.submit()" required>
                     <option value="">-- Choose --</option>
                     <?php while ($ex = $exhibitions->fetch_assoc()): ?>
@@ -93,9 +139,9 @@ $all_artworks = $conn->query("SELECT a.id, a.title, u.name AS artist_name FROM a
     </form>
 
     <?php if ($selected_exhibition_id): ?>
-        <h4 class="mb-3">Artworks in: <?= htmlspecialchars($exhibition_title) ?></h4>
+        <h4 class="mb-3">Artworks in: <span class="text-primary"><?= htmlspecialchars($exhibition_title) ?></span></h4>
 
-        <div class="table-responsive mb-4">
+        <div class="table-responsive mb-4 shadow-sm rounded">
             <table class="table table-bordered table-striped align-middle">
                 <thead class="table-dark">
                     <tr>
@@ -107,41 +153,53 @@ $all_artworks = $conn->query("SELECT a.id, a.title, u.name AS artist_name FROM a
                     </tr>
                 </thead>
                 <tbody>
-                    <?php while ($art = $assigned_artworks->fetch_assoc()): ?>
+                    <?php if ($assigned_artworks->num_rows > 0): ?>
+                        <?php while ($art = $assigned_artworks->fetch_assoc()): ?>
+                            <tr>
+                                <td><?= htmlspecialchars($art['title']) ?></td>
+                                <td><?= htmlspecialchars($art['medium']) ?></td>
+                                <td><?= $art['year_created'] ?></td>
+                                <td><?= htmlspecialchars($art['artist_name']) ?></td>
+                                <td>
+                                    <a href="remove_artwork_from_exhibition.php?exhibition_id=<?= $selected_exhibition_id ?>&artwork_id=<?= $art['id'] ?>"
+                                       class="btn btn-sm btn-danger"
+                                       onclick="return confirm('Remove this artwork?')"
+                                       title="Remove Artwork">
+                                        Remove
+                                    </a>
+                                </td>
+                            </tr>
+                        <?php endwhile; ?>
+                    <?php else: ?>
                         <tr>
-                            <td><?= htmlspecialchars($art['title']) ?></td>
-                            <td><?= htmlspecialchars($art['medium']) ?></td>
-                            <td><?= $art['year_created'] ?></td>
-                            <td><?= htmlspecialchars($art['artist_name']) ?></td>
-                            <td>
-                                <a href="remove_artwork_from_exhibition.php?exhibition_id=<?= $selected_exhibition_id ?>&artwork_id=<?= $art['id'] ?>" 
-                                   class="btn btn-sm btn-danger"
-                                   onclick="return confirm('Remove this artwork?')">Remove</a>
-                            </td>
+                            <td colspan="5" class="text-center text-muted fst-italic">No artworks assigned yet.</td>
                         </tr>
-                    <?php endwhile; ?>
+                    <?php endif; ?>
                 </tbody>
             </table>
         </div>
 
         <h4 class="mb-3">Add Artwork to Exhibition</h4>
-        <form method="post" action="add_artwork_to_exhibition.php" class="row g-3 align-items-center">
+        <form method="post" action="add_artwork_to_exhibition.php" class="row g-3 align-items-center justify-content-center">
             <input type="hidden" name="exhibition_id" value="<?= $selected_exhibition_id ?>">
             <div class="col-auto">
-                <label for="artwork_id" class="col-form-label">Select Artwork:</label>
+                <label for="artwork_id" class="col-form-label fw-semibold">Select Artwork:</label>
             </div>
-            <div class="col-auto">
+            <div class="col-auto" style="min-width: 300px;">
                 <select name="artwork_id" id="artwork_id" class="form-select" required>
                     <?php while ($art = $all_artworks->fetch_assoc()): ?>
-                        <option value="<?= $art['id'] ?>"><?= htmlspecialchars($art['title']) ?> (<?= htmlspecialchars($art['artist_name']) ?>)</option>
+                        <option value="<?= $art['id'] ?>">
+                            <?= htmlspecialchars($art['title']) ?> (<?= htmlspecialchars($art['artist_name']) ?>)
+                        </option>
                     <?php endwhile; ?>
                 </select>
             </div>
             <div class="col-auto">
-                <button type="submit" class="btn btn-primary">Assign to Exhibition</button>
+                <button type="submit" class="btn btn-primary px-4">Assign to Exhibition</button>
             </div>
         </form>
     <?php endif; ?>
 </div>
+
 </body>
 </html>
