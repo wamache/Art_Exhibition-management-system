@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: my-php-service
+    env: php
+    branch: main
+    buildCommand: "composer install"
+    startCommand: "php -S 0.0.0.0:10000 -t public"
+    plan: free
+    envVars:
+      - key: ENV_VAR_NAME
+        value: ENV_VAR_VALUE
